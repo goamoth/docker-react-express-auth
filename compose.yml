@@ -1,0 +1,79 @@
+#version: 3 - obsolete and only informative
+name: docker-react-express-auth
+
+services:
+   frontend:
+      build: ./frontend
+      container_name: frontend
+      depends_on:
+         - backend
+      ports:
+         - 5173:5173
+      volumes:
+         - /app/node_modules
+      networks:
+         client:
+            # ipv4_address: 172.16.238.200
+      develop:
+         watch:
+            -  action: sync
+               path: ./frontend/src
+               target: /app/src
+            -  action: rebuild
+               path: ./frontend/package.json
+               target: /app
+
+   backend:
+      build: ./backend
+      container_name: backend
+      # depends_on:
+      #    - redis
+      ports:
+         - 8000:8000
+      volumes:
+         - /app/node_modules
+      networks:
+         client:
+            # ipv4_address: 172.16.238.10
+      develop:
+         watch:
+            -  action: sync+restart
+               path: ./backend
+               target: /app
+            -  action: rebuild
+               path: ./backend/package.json
+
+   # redis:
+   #    image: redis:alpine
+   #    restart: always
+   #    volumes:
+   #       - redis_volume_data:/data
+   #    ports:
+   #       - 6379:6379
+   #    networks:
+   #       - server
+
+   # redis_insight:
+   #    image: redis/redisinsight:latest
+   #    restart: always
+   #    depends_on:
+   #       - redis
+   #    volumes:
+   #       - redis_insight_volume_data:/db
+   #    ports:
+   #       - 8001:8001
+   #    networks:
+   #       - server
+
+# volumes:
+#    redis_volume_data:
+#    redis_insight_volume_data:
+
+networks:
+   client:
+      # ipam:
+      #    driver: default
+      #    config:
+      #       -  subnet: "172.16.238.0/24"
+
+# docker run -p 3000:3000 -v $(pwd):/app:ro -v /app/node_modules --name node_app_container node_app_image
