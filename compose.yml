@@ -1,4 +1,4 @@
-#version: 3 - obsolete and only informative
+# version: 3 - obsolete and only informative
 name: docker-react-express-auth
 
 services:
@@ -13,7 +13,6 @@ services:
          - /app/node_modules
       networks:
          client:
-            # ipv4_address: 172.16.238.200
       develop:
          watch:
             -  action: sync
@@ -34,7 +33,6 @@ services:
          - /app/node_modules
       networks:
          client:
-            # ipv4_address: 172.16.238.10
       develop:
          watch:
             -  action: sync+restart
@@ -42,6 +40,41 @@ services:
                target: /app
             -  action: rebuild
                path: ./backend/package.json
+
+   postgres:
+      image: postgres:17.0-alpine3.20
+      container_name: postgres
+      restart: unless-stopped
+      ports:
+         - 5432:5432
+      volumes:
+         -  postgres_data:/var/lib/postgresql/data
+      networks:
+         server:
+      environment:
+         POSTGRES_HOST_AUTH_METHOD: trust
+         POSTGRES_USER: ${POSTGRES_USER}
+         POSTGRES_PASSWORD: /run/secrets/db_password
+         POSTGRES_DB: ${POSTGRES_DB}
+      secrets:
+         -  db_password
+
+   pgadmin:
+      image: dpage/pgadmin4
+      container_name: pgadmin
+      depends_on:
+         - postgres
+      restart: unless-stopped
+      networks:
+         server:
+      ports:
+         - 5050:80
+      environment:
+         PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+         PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin_password
+      secrets:
+         -  pgadmin_password
+
 
    # redis:
    #    image: redis:alpine
@@ -65,15 +98,21 @@ services:
    #    networks:
    #       - server
 
-# volumes:
-#    redis_volume_data:
-#    redis_insight_volume_data:
+volumes:
+   postgres_data:
+   #   driver: local
+   # redis_volume_data:
+   # redis_insight_volume_data:
 
 networks:
    client:
-      # ipam:
-      #    driver: default
-      #    config:
-      #       -  subnet: "172.16.238.0/24"
+   server:
+
+secrets:
+   db_password:
+      file: ./secrets/db_password.txt
+   pgadmin_password:
+      file: ./secrets/pgadmin_password.txt
 
 # docker run -p 3000:3000 -v $(pwd):/app:ro -v /app/node_modules --name node_app_container node_app_image
+# docker exec -it postgres psql -U admin -W docker-mern

@@ -12,7 +12,7 @@ app.use(cors({
 }));
 
 app.get('/', (req, res) => {
-   res.json("Docker-react-express-auth API! Sasa Georgy!");
+   res.json("Docker-react-express-auth API! Sasa Georgy! Poa Sana!!!");
 });
 
 app.listen(PORT, () => {
